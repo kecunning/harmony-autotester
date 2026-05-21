@@ -12,12 +12,18 @@ conftest.py, which sets up common functionality for:
 import json
 import os
 
+import earthaccess
 import pytest
 from harmony import Client, Environment, Request
 
 environment_mapping = {
     'production': Environment.PROD,
     'UAT': Environment.UAT,
+}
+
+earthaccess_mapping = {
+    'production': earthaccess.PROD,
+    'UAT': earthaccess.UAT,
 }
 
 
@@ -44,10 +50,20 @@ def service_collection(request):
 def harmony_client():
     """A harmony-py Client object for making requests."""
     environment_string = os.environ.get('EARTHDATA_ENVIRONMENT')
-    edl_user = os.environ.get('EDL_USER')
-    edl_password = os.environ.get('EDL_PASSWORD')
+    earthdata_username = os.environ.get('EARTHDATA_USERNAME')
+    earthdata_password = os.environ.get('EARTHDATA_PASSWORD')
     return Client(
-        auth=(edl_user, edl_password), env=environment_mapping.get(environment_string)
+        auth=(earthdata_username, earthdata_password),
+        env=environment_mapping.get(environment_string),
+    )
+
+
+@pytest.fixture(scope='session')
+def earthaccess_login():
+    """An earthaccess Client object for accessing metadata."""
+    environment_string = os.environ.get('EARTHDATA_ENVIRONMENT')
+    return earthaccess.login(
+        strategy='environment', system=earthaccess_mapping.get(environment_string)
     )
 
 
